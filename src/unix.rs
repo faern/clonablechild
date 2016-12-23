@@ -20,16 +20,3 @@ impl ClonableChild {
         }
     }
 }
-
-#[cfg(test)]
-pub mod testing {
-    use std::process::ExitStatus;
-
-    pub const LONG_RUNNING_COMMAND: (&'static str, &'static [&'static str]) = ("sleep", &["3"]);
-
-    pub const INSTANT_EXIT_COMMAND: (&'static str, &'static [&'static str]) = ("echo", &[]);
-
-    pub fn was_killed(exit_status: &ExitStatus) -> bool {
-        (!exit_status.success()) && (exit_status.code().is_none())
-    }
-}
