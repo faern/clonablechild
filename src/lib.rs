@@ -15,7 +15,7 @@
 //!
 //! Use it in your program to kill a sleep process before it terminates naturally:
 //!
-//! ```rust
+//! ```rust,ignore
 //! extern crate clonablechild;
 //!
 //! use clonablechild::ChildExt;
