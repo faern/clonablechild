@@ -2,6 +2,13 @@
 name = "clonablechild"
 version = "0.1.0"
 authors = ["Linus Färnstrand <faern@faern.net>"]
+license = "MIT/Apache-2.0"
+homepage = "https://github.com/faern/clonablechild"
+repository = "https://github.com/faern/clonablechild"
+documentation = "https://docs.rs/clonablechild/"
+description = "Extends and wraps `std::process::Child` to make it clonable"
+readme = "README.md"
+keywords = ["command", "process", "child", "clone", "wait", "kill"]
 
 [dependencies]
 libc = "0.2"
