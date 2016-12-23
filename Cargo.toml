@@ -8,7 +8,7 @@ repository = "https://github.com/faern/clonablechild"
 documentation = "https://docs.rs/clonablechild/"
 description = "Extends and wraps `std::process::Child` to make it clonable"
 readme = "README.md"
-keywords = ["command", "process", "child", "clone", "wait", "kill"]
+keywords = ["command", "process", "child", "clone", "wait"]
 
 [dependencies]
 libc = "0.2"
