@@ -1,9 +1,9 @@
 environment:
   matrix:
     - TARGET: x86_64-pc-windows-msvc
-      RUST_CHANNEL: 1.13.0
+      RUST_CHANNEL: 1.14.0
     - TARGET: i686-pc-windows-msvc
-      RUST_CHANNEL: 1.13.0
+      RUST_CHANNEL: 1.14.0
     - TARGET: x86_64-pc-windows-msvc
       RUST_CHANNEL: beta
     - TARGET: i686-pc-windows-msvc
