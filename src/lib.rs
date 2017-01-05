@@ -50,7 +50,7 @@
 extern crate libc;
 
 use std::io;
-use std::process::{Child, ExitStatus};
+use std::process::{Child, ExitStatus, ChildStdin, ChildStdout, ChildStderr};
 use std::sync::{Arc, Mutex};
 
 #[cfg(unix)]
@@ -75,22 +75,42 @@ impl ChildExt for Child {
     }
 }
 
+struct ChildIo {
+    pub stdin: Option<ChildStdin>,
+    pub stdout: Option<ChildStdout>,
+    pub stderr: Option<ChildStderr>,
+}
+
+impl ChildIo {
+    pub fn new(child: &mut Child) -> Self {
+        ChildIo {
+            stdin: child.stdin.take(),
+            stdout: child.stdout.take(),
+            stderr: child.stderr.take(),
+        }
+    }
+}
+
 /// Representation of a clonable `std::process::Child`.
 #[derive(Clone)]
 pub struct ClonableChild {
     id: u32,
     child: Arc<Mutex<Child>>,
     imp_child: imp::ClonableChild,
+    io: Arc<Mutex<ChildIo>>,
 }
 
 impl ClonableChild {
     /// Creates a new `ClonableChild` by consuming and wrapping the given `Child`.
-    pub fn new(child: Child) -> Self {
+    pub fn new(mut child: Child) -> Self {
         let imp_child = imp::ClonableChild::new(&child);
+        let io = Arc::new(Mutex::new(ChildIo::new(&mut child)));
+
         ClonableChild {
             id: child.id(),
             child: Arc::new(Mutex::new(child)),
             imp_child: imp_child,
+            io: io,
         }
     }
 
@@ -119,5 +139,23 @@ impl ClonableChild {
     pub fn wait(&self) -> io::Result<ExitStatus> {
         let mut child = self.child.lock().unwrap();
         child.wait()
+    }
+
+    /// Retrieve the stdin stream from the child if one exist. Will only return something on the
+    /// first call.
+    pub fn stdin(&mut self) -> Option<ChildStdin> {
+        self.io.lock().unwrap().stdin.take()
+    }
+
+    /// Retrieve the stdout stream from the child if one exist. Will only return something on the
+    /// first call.
+    pub fn stdout(&mut self) -> Option<ChildStdout> {
+        self.io.lock().unwrap().stdout.take()
+    }
+
+    /// Retrieve the stderr stream from the child if one exist. Will only return something on the
+    /// first call.
+    pub fn stderr(&mut self) -> Option<ChildStderr> {
+        self.io.lock().unwrap().stderr.take()
     }
 }

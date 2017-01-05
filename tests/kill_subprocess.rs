@@ -4,7 +4,7 @@ use clonablechild::{ChildExt, ClonableChild};
 
 use platform_helper::*;
 
-use std::io;
+use std::io::{self, Read};
 use std::process::{Command, Stdio, ExitStatus};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
@@ -75,20 +75,46 @@ fn multiple_wait_and_kill_long_running_child() {
     }
 }
 
+#[test]
+fn stdio_is_passed_to_cloned_child() {
+    let mut testee = create_testee_with_stdout(INSTANT_EXIT_COMMAND);
 
-fn create_testee(command: (&str, &[&str])) -> ClonableChild {
-    let child = Command::new(command.0)
-        .args(command.1)
-        .stdout(Stdio::null())
+    let mut stdout = testee.stdout().expect("Expected stdout");
+    let mut stderr = testee.stderr().expect("Expected stderr");
+    let mut stdout_string = String::new();
+    let mut stderr_string = String::new();
+    stdout.read_to_string(&mut stdout_string).expect("Expected to read from stdout");
+    stderr.read_to_string(&mut stderr_string).expect("Expected to read from stderr");
+
+    assert_eq!("hello\n", stdout_string);
+    assert_eq!("", stderr_string);
+}
+
+
+
+fn create_testee(cmd: (&str, &[&str])) -> ClonableChild {
+    create_testee_child(cmd, Stdio::null(), Stdio::null())
+}
+
+fn create_testee_with_stdout(cmd: (&str, &[&str])) -> ClonableChild {
+    create_testee_child(cmd, Stdio::piped(), Stdio::piped())
+}
+
+fn create_testee_child(cmd: (&str, &[&str]), stdout: Stdio, stderr: Stdio) -> ClonableChild {
+    let child = Command::new(cmd.0)
+        .args(cmd.1)
+        .stdout(stdout)
+        .stderr(stderr)
         .spawn()
-        .expect(&format!("Expected to be able to spawn {}", command.0));
+        .expect(&format!("Expected to be able to spawn {}", cmd.0));
     child.into_clonable()
 }
 
+
 fn create_testee_where_many_threads_wait
-    (command: (&str, &[&str]))
+    (cmd: (&str, &[&str]))
      -> (ClonableChild, Vec<JoinHandle<io::Result<ExitStatus>>>) {
-    let testee = create_testee(command);
+    let testee = create_testee(cmd);
     let mut threads = vec![];
     for _ in 0..10 {
         let testee_clone = testee.clone();
@@ -111,7 +137,7 @@ pub mod platform_helper {
 
     pub const LONG_RUNNING_COMMAND: (&'static str, &'static [&'static str]) = ("sleep", &["3"]);
 
-    pub const INSTANT_EXIT_COMMAND: (&'static str, &'static [&'static str]) = ("echo", &[]);
+    pub const INSTANT_EXIT_COMMAND: (&'static str, &'static [&'static str]) = ("echo", &["hello"]);
 
     pub fn was_killed(exit_status: &ExitStatus) -> bool {
         (!exit_status.success()) && (exit_status.code().is_none())
@@ -125,7 +151,7 @@ pub mod platform_helper {
     pub const LONG_RUNNING_COMMAND: (&'static str, &'static [&'static str]) =
         ("ping", &["127.0.0.1", "-n", "4"]);
 
-    pub const INSTANT_EXIT_COMMAND: (&'static str, &'static [&'static str]) = ("echo", &[]);
+    pub const INSTANT_EXIT_COMMAND: (&'static str, &'static [&'static str]) = ("echo", &["hello"]);
 
     pub fn was_killed(exit_status: &ExitStatus) -> bool {
         (!exit_status.success()) && (exit_status.code() == Some(1))
