@@ -1,5 +1,7 @@
 # ClonableChild
 
+**DEPRECATED**: *This crate has been deprecated and yanked from crates.io. The problem it solves is solved in a better way by the [`shared_child`](https://crates.io/crates/shared_child) crate. See [this issue](https://github.com/oconnor663/shared_child.rs/issues/9) for more information.*
+
 Extends and wraps `std::process::Child` to make it clonable. Thus eliminating the problem that
 `libstd` does not have a cross platfrom and simple way to kill a child while also waiting for it.
 
